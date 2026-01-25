@@ -69,6 +69,10 @@ class PINNs:
     @abstractmethod
     def get_diag_ntk(self, params, batch):
         pass  # To be implemented in each pde subclass
+
+    @abstractmethod
+    def get_l2_error(self, params, t, x):
+        pass  # To be implemented in each pde subclass
     
     @partial(jit, static_argnums=(0,))
     def get_total_loss(self, params, weight, batch):
@@ -102,3 +106,14 @@ class PINNs:
         grads = lax.pmean(grads, axis_name='batch')
         new_state = state.apply_gradients(grads=grads)
         return new_state
+    
+    def metrics_step(self):
+        """
+        Output log_dict: {
+            'losses': {...},
+            'loss_weights': {...},
+            'ntk': {...},
+            'l2_error': ...,
+            'u_pred': fig,
+        }
+        """
