@@ -38,5 +38,27 @@ class Logger:
     def info(self, message):
         self.logger.info(message)
 
-    def record(self, log_dict: Dict, start_time, end_time):
-        raise NotImplementedError("The 'record' method should be implemented later.")
+    def record(self, step, log_dict: Dict, start_time, end_time):
+        log_items = [
+            [key, f"{log_dict[key]:.3f}"]
+            for key in log_dict.keys()
+            if key.endswith("loss") or key.endswith("error")
+        ]
+
+        message = tabulate(
+            log_items,
+            headers=[
+                "Step: {:3d}".format(step),
+                "Time: {:.3f}".format(end_time - start_time),
+            ],
+            tablefmt="github",
+            numalign="right",
+            disable_numparse=True,
+        )
+
+        message_len = len(message.split("\n")[0]) + 2
+        seperator = "-" * message_len
+        full_message = f"{seperator}\n{message}"
+
+        for line in full_message.split("\n"):
+            self.logger.info(line)

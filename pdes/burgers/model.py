@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from jax.flatten_util import ravel_pytree
 
 from src.architectures.mlp import MLP
-from basemodel import PINNs
+from src.basemodel import PINNs
 
 def ntk(fn, params, *args):
     J = grad(fn, argnums=0)(params, *args)

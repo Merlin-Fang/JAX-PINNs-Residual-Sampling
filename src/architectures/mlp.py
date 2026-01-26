@@ -35,7 +35,8 @@ class Dense(nn.Module):
         return y
     
 class MLP(nn.Module):
-    hidden_sizes: Sequence[int] = [256, 256, 256, 256]
+    hidden_layers: int = 4
+    hidden_size: int = 256
     output_size: int = 1
     activation: Callable = nn.relu
     use_bias: bool = True
@@ -43,8 +44,8 @@ class MLP(nn.Module):
 
     @nn.compact
     def __call__(self, x):
-        for size in self.hidden_sizes:
-            x = Dense(features=size, weight_fact=self.weight_fact)(x)
+        for i in range(self.hidden_layers):
+            x = Dense(features=self.hidden_size, weight_fact=self.weight_fact)(x)
             x = self.activation(x)
         x = Dense(features=self.output_size, weight_fact=self.weight_fact)(x)
         return x
