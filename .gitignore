@@ -1,6 +1,8 @@
 #local logs
 pdes/burgers/logs/*
 pdes/burgers/figures/*
+pdes/allen_cahn/logs/*
+pdes/allen_cahn/figures/*
 ckpts/*
 wandb/*
 

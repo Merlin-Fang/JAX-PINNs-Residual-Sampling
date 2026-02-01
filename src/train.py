@@ -6,6 +6,7 @@ import jax.numpy as jnp
 from jax.tree_util import tree_map
 
 import ml_collections
+from tqdm import trange
 import wandb
 
 from src.sampling import Sampler
@@ -44,27 +45,34 @@ def train(config: ml_collections.ConfigDict):
     ModelClass = _PDE_MODELS[config.pde.name]
     model = ModelClass(config, IC=(u_ref[0, :], jnp.full_like(x, t[0]), x))
     per_device_batch_size = config.training.batch_size // jax.local_device_count()
-    sampler = iter(Sampler(jnp.array([[t[0], t[-1]], [x[0], x[-1]]]), config.training.batch_size, config.training.seed))
+    sampler = iter(Sampler(jnp.array([[t[0], t[-1]], [x[0], x[-1]]]), per_device_batch_size, config.training.seed))
     save_dir = os.path.join(workdir, 'ckpts', config.pde.name, config.pde.experiment)
 
     print("Waiting for jit...")
 
     start_time = time.time()
-    for step in range(config.training.num_steps):
+    for step in trange(
+        config.training.num_steps,
+        desc="Training",
+        dynamic_ncols=True,
+    ):
         batch = next(sampler)
         model.state = model.train_step(model.state, batch)
 
         if config.weighing.scheme == 'ntk':
             if step % config.weighing.update_freq == 0 and step > 0:
                 model.state = model.update_loss_weights(model.state, batch)
-
+ 
         if step % config.logging.freq == 0:
-            print(f"Logging at step {step}...")
             state = jax.device_get(tree_map(lambda x: x[0], model.state))
             batch = jax.device_get(tree_map(lambda x: x[0], batch))
             log_dict = model.metrics_step(state, batch, u_ref, t, x)
             if config.wandb.use:
                 wandb.log(log_dict, step)
+
+            trange.set_postfix({
+                "L2_error": float(log_dict.get("l2_error", 0.0)),
+            })
 
             end_time = time.time()
             logger.record(step, log_dict, start_time, end_time)

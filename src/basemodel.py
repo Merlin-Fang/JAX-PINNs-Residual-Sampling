@@ -50,7 +50,9 @@ def create_model(config) -> nn.Module:
         hidden_size=config.model.hidden_size,
         output_size=config.model.output_size,
         activation=get_activation(config.model.activation),
-        weight_fact=config.model.weight_fact
+        weight_fact=config.model.weight_fact,
+        periodic_embed=config.model.periodic_embed,
+        fourier_embed=config.model.fourier_embed,
     )
     return model
 

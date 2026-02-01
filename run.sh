@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ----- choose GPUs -----
-export CUDA_VISIBLE_DEVICES="6"
+export CUDA_VISIBLE_DEVICES="5,6"
 
 # ----- determinism / reproducibility -----
 export TF_CUDNN_DETERMINISTIC="1"

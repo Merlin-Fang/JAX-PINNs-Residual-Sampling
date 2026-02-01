@@ -1,11 +1,12 @@
 from ml_collections import ConfigDict
+from jax import numpy as jnp
 
 def get_config():
     config = ConfigDict()
 
     config.pde = ConfigDict()
     config.pde.name = 'allen_cahn'
-    config.pde.run = 'test'
+    config.pde.run = 'weight_fact'
     config.pde.experiment = config.pde.name + '_experiment_' + config.pde.run
 
     config.model = ConfigDict()
@@ -13,11 +14,13 @@ def get_config():
     config.model.hidden_size = 256
     config.model.output_size = 1
     config.model.activation = 'tanh'  # Options could be 'relu', 'tanh', etc.
-    config.model.weight_fact = None  # Example: {'mean': 0.0, 'stddev': 0.1} or None
+    config.model.weight_fact = {'mean': 0.5, 'stddev': 0.1}
+    config.model.periodic_embed = {'period': jnp.pi, 'axis': (1,)}
+    config.model.fourier_embed = {'scale': 1.0, 'dim': 256}
 
     config.training = ConfigDict()
     config.training.seed = 42
-    config.training.batch_size = 4096 # Total batch size across all devices
+    config.training.batch_size = 4096 * 2 # Total batch size across all devices
     config.training.num_steps = 30000
     config.training.momentum = 0.9
     config.training.loss_weights = {"ic": 1.0, "res": 1.0}  # Initial loss weights can be set here
