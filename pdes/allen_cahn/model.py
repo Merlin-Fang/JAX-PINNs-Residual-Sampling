@@ -1,23 +1,23 @@
-from jax import lax, pmap, jit, grad, vmap
+from jax import grad
 import jax.numpy as jnp
 
 from src.basemodel import PINNs
 
-class Burgers(PINNs):
+class Allen_Cahn(PINNs):
     """
-    Burgers Equation: u_t + u * u_x - v * u_xx = 0
-    v = 0.01 / π
-    Initial condition: u(0, x) = -sin(π * x)
+    Allen–Cahn Equation: u_t = a*u + v*u_xx - a*u^3
+    a = 5
+    v = 0.0001
     """
     def __init__(self, config, IC):
         super().__init__(config, IC)
-        self.v = 0.01 / jnp.pi
+        self.a = 5.0
+        self.v = 1e-4
 
     def get_residual(self, params, t, x):
         u = self.get_solution(params, t, x)
         u_t = grad(self.get_solution, argnums=1)(params, t, x)
-        u_x = grad(self.get_solution, argnums=2)(params, t, x)
         u_xx = grad(grad(self.get_solution, argnums=2), argnums=2)(params, t, x)
-        residual = u_t + u * u_x - self.v * u_xx
+
+        residual = u_t - self.a * u - self.v * u_xx + self.a * (u ** 3)
         return residual
-    

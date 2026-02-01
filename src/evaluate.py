@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 from src.utils import load_dataset, load_checkpoint
 
 def eval(config, ckptdir, model, step=None):
-    u_ref, t, x = load_dataset()
+    data_dir = os.path.join(config.pde.name, 'data', f"{config.pde.name}.mat")
+    u_ref, t, x = load_dataset(data_dir)
     state_host = jax.device_get(tree_map(lambda y: y[0], model.state))
     state = load_checkpoint(state_host, ckptdir, step=step)
     params = state.params

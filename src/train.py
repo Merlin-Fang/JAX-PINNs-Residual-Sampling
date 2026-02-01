@@ -12,8 +12,15 @@ from src.sampling import Sampler
 from src.logging import Logger
 from src.utils import load_dataset, save_checkpoint
 from pdes.burgers.model import Burgers
+from pdes.allen_cahn.model import Allen_Cahn
+
+_PDE_MODELS = {
+    "burgers": Burgers,
+    "allen_cahn": Allen_Cahn,
+}
 
 def train(config: ml_collections.ConfigDict):
+    assert config.pde.name in _PDE_MODELS, f"Unknown PDE: {config.pde.name}"
     workdir = '/scratch/merlinf/repos/PINNs-Training-Dynamics'
 
     if config.wandb.use:
@@ -31,9 +38,12 @@ def train(config: ml_collections.ConfigDict):
         } if config.logging.handler_type == 'file' else None,
     )
 
-    u_ref, t, x = load_dataset()
+    data_dir = os.path.join(config.pde.name, 'data', f"{config.pde.name}.mat")
+    u_ref, t, x = load_dataset(data_dir)
 
-    model = Burgers(config, IC=(u_ref[0, :], jnp.full_like(x, t[0]), x))
+    ModelClass = _PDE_MODELS[config.pde.name]
+    model = ModelClass(config, IC=(u_ref[0, :], jnp.full_like(x, t[0]), x))
+    per_device_batch_size = config.training.batch_size // jax.local_device_count()
     sampler = iter(Sampler(jnp.array([[t[0], t[-1]], [x[0], x[-1]]]), config.training.batch_size, config.training.seed))
     save_dir = os.path.join(workdir, 'ckpts', config.pde.name, config.pde.experiment)
 

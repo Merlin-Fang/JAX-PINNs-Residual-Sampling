@@ -2,10 +2,15 @@
 set -euo pipefail
 
 # ----- choose GPUs -----
-export CUDA_VISIBLE_DEVICES="0, 1, 2, 3, 4"
+export CUDA_VISIBLE_DEVICES="6"
 
 # ----- determinism / reproducibility -----
 export TF_CUDNN_DETERMINISTIC="1"
+
+# ----- Delete prior runs logs -----
+rm -rf /scratch/merlinf/repos/PINNs-Training-Dynamics/pdes/allen_cahn/figures/*
+rm -rf /scratch/merlinf/repos/PINNs-Training-Dynamics/pdes/allen_cahn/logs/*
+rm -rf /scratch/merlinf/repos/PINNs-Training-Dynamics/ckpts/allen_cahn/*
 
 # ----- run -----
 python -m src.main --config ./src/configs/default.py

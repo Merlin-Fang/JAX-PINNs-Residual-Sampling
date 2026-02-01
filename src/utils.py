@@ -5,8 +5,9 @@ import scipy.io
 from jax.tree_util import tree_map
 from flax.training import checkpoints
 
-def load_dataset():
-    data = scipy.io.loadmat("/scratch/merlinf/repos/PINNs-Training-Dynamics/pdes/burgers/data/burgers.mat")
+def load_dataset(data_dir: str):
+    data_dir = os.path.join("/scratch/merlinf/repos/PINNs-Training-Dynamics/pdes", data_dir)
+    data = scipy.io.loadmat(data_dir)
     u_ref = data["usol"]
     t = data["t"].flatten()
     x = data["x"].flatten()

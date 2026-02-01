@@ -10,6 +10,7 @@ from flax import linen as nn
 from flax import jax_utils
 from flax.training import train_state
 from jax.tree_util import tree_map, tree_leaves, tree_reduce
+from jax.flatten_util import ravel_pytree
 from matplotlib import pyplot as plt
 
 from src.architectures.mlp import MLP
@@ -93,12 +94,17 @@ def create_train_state(config):
     )
     return jax_utils.replicate(state)
 
+def ntk(fn, params, *args):
+    J = grad(fn, argnums=0)(params, *args)
+    J = ravel_pytree(J)[0]
+    return jnp.dot(J, J)
 
 class PINNs:
-    def __init__(self, config):
+    def __init__(self, config, IC):
         self.config = config
         self.model = create_model(config)
         self.state = create_train_state(config)
+        self.IC = IC # Initial condition, IC[0]: u values, IC[1]: t values, IC[2]: x values
 
     def get_solution(self, params, t, x):
         x = jnp.stack([t, x])
@@ -109,17 +115,22 @@ class PINNs:
     def get_residual(self, params, t, x):
         pass  # To be implemented in each pde subclass
 
-    @abstractmethod
     def get_losses(self, params, batch):
-        pass  # To be implemented in each pde subclass
+        u0_pred = vmap(self.get_solution, in_axes=(None, 0, 0))(params, self.IC[1], self.IC[2])
+        ic_loss = jnp.mean((u0_pred - self.IC[0])**2)
 
-    @abstractmethod
+        res = vmap(self.get_residual, in_axes=(None, 0, 0))(params, batch[:, 0], batch[:, 1])
+        res_loss = jnp.mean(res**2)
+
+        losses = {'ic': ic_loss, 'res': res_loss}
+        return losses
+
     def get_diag_ntk(self, params, batch):
-        pass  # To be implemented in each pde subclass
+        ic_ntk = vmap(ntk, in_axes=(None, None, 0, 0))(self.get_solution, params, self.IC[1], self.IC[2])
+        res_ntk = vmap(ntk, in_axes=(None, None, 0, 0))(self.get_residual, params, batch[:, 0], batch[:, 1])
 
-    @abstractmethod
-    def get_l2_error(self, params, t, x):
-        pass  # To be implemented in each pde subclass
+        diag_ntk = {'ic': ic_ntk, 'res': res_ntk}
+        return diag_ntk
     
     @partial(jit, static_argnums=(0,))
     def get_total_loss(self, params, weight, batch):

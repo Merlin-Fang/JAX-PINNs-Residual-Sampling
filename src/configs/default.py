@@ -4,8 +4,8 @@ def get_config():
     config = ConfigDict()
 
     config.pde = ConfigDict()
-    config.pde.name = 'burgers'
-    config.pde.run = 'default'
+    config.pde.name = 'allen_cahn'
+    config.pde.run = 'test'
     config.pde.experiment = config.pde.name + '_experiment_' + config.pde.run
 
     config.model = ConfigDict()
@@ -17,8 +17,8 @@ def get_config():
 
     config.training = ConfigDict()
     config.training.seed = 42
-    config.training.batch_size = 4096
-    config.training.num_steps = 20000
+    config.training.batch_size = 4096 # Total batch size across all devices
+    config.training.num_steps = 30000
     config.training.momentum = 0.9
     config.training.loss_weights = {"ic": 1.0, "res": 1.0}  # Initial loss weights can be set here
     config.training.save_freq = None 
@@ -29,7 +29,7 @@ def get_config():
     config.optim.beta1 = 0.9
     config.optim.beta2 = 0.999
     config.optim.eps = 1e-8
-    config.optim.learning_rate = 1e-3
+    config.optim.learning_rate = 3e-3
     config.optim.decay_rate = 0.9
     config.optim.decay_steps = 2000
 

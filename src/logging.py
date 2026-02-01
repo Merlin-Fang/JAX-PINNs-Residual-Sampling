@@ -39,11 +39,6 @@ class Logger:
         self.logger.info(message)
 
     def record(self, step, log_dict: Dict, start_time, end_time):
-        # log_items = [
-        #     [key, f"{log_dict[key]:.6f}"]
-        #     for key in log_dict.keys()
-        #     if key.endswith("loss") or key.endswith("error")
-        # ]
 
         log_items = [
             [key, f"{log_dict[key]:.6f}"]
