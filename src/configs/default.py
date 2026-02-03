@@ -5,8 +5,8 @@ def get_config():
     config = ConfigDict()
 
     config.pde = ConfigDict()
-    config.pde.name = 'allen_cahn'
-    config.pde.run = 'weight_fact'
+    config.pde.name = 'burgers'
+    config.pde.run = 'NTK+ResSampler'
     config.pde.experiment = config.pde.name + '_experiment_' + config.pde.run
 
     config.model = ConfigDict()
@@ -20,8 +20,8 @@ def get_config():
 
     config.training = ConfigDict()
     config.training.seed = 42
-    config.training.batch_size = 4096 * 2 # Total batch size across all devices
-    config.training.num_steps = 30000
+    config.training.batch_size = 4096 * 4 # Total batch size across all devices
+    config.training.num_steps = 50000
     config.training.momentum = 0.9
     config.training.loss_weights = {"ic": 1.0, "res": 1.0}  # Initial loss weights can be set here
     config.training.save_freq = None 
@@ -41,8 +41,16 @@ def get_config():
     config.weighing.momentum = 0.9  # Momentum for updating loss weights
     config.weighing.update_freq = 1000  # Update loss weights every n steps
 
+    config.sampling = ConfigDict()
+    config.sampling.method = 'residual'  # Options: 'uniform', 'residual'
+    config.sampling.pool_size = 4096 * 5
+    config.sampling.temperature = 1.0
+    config.sampling.uniform_eps = 0.1
+    config.sampling.recalcprob_freq = 100 # Frequency to recalculate pool probabilities
+    config.sampling.refpool_freq = 1000 # Frequency to refresh the candidate pool
+
     config.wandb = ConfigDict()
-    config.wandb.use = True
+    config.wandb.use = False
     config.wandb.project = 'pinns-training-dynamics'
 
     config.logging = ConfigDict()
