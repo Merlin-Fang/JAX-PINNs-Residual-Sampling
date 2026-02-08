@@ -5,8 +5,8 @@ def get_config():
     config = ConfigDict()
 
     config.pde = ConfigDict()
-    config.pde.name = 'burgers'
-    config.pde.run = 'NTK+ResSampler'
+    config.pde.name = 'allen_cahn'  # Options: 'burgers', 'allen_cahn', 'ks'
+    config.pde.run = 'residual_sampling'  # Options: 'uniform_sampling', 'residual_sampling'
     config.pde.experiment = config.pde.name + '_experiment_' + config.pde.run
 
     config.model = ConfigDict()
@@ -20,8 +20,9 @@ def get_config():
 
     config.training = ConfigDict()
     config.training.seed = 42
-    config.training.batch_size = 4096 * 4 # Total batch size across all devices
-    config.training.num_steps = 50000
+    config.training.global_batch_size = 4096 # Total batch size across all devices
+    config.training.batch_size_per_device = 1024
+    config.training.num_steps = 30000
     config.training.momentum = 0.9
     config.training.loss_weights = {"ic": 1.0, "res": 1.0}  # Initial loss weights can be set here
     config.training.save_freq = None 
@@ -32,7 +33,7 @@ def get_config():
     config.optim.beta1 = 0.9
     config.optim.beta2 = 0.999
     config.optim.eps = 1e-8
-    config.optim.learning_rate = 3e-3
+    config.optim.learning_rate = 1e-3
     config.optim.decay_rate = 0.9
     config.optim.decay_steps = 2000
 
@@ -43,14 +44,14 @@ def get_config():
 
     config.sampling = ConfigDict()
     config.sampling.method = 'residual'  # Options: 'uniform', 'residual'
-    config.sampling.pool_size = 4096 * 5
-    config.sampling.temperature = 1.0
-    config.sampling.uniform_eps = 0.1
-    config.sampling.recalcprob_freq = 100 # Frequency to recalculate pool probabilities
-    config.sampling.refpool_freq = 1000 # Frequency to refresh the candidate pool
+    config.sampling.hard_bank_mult = 50
+    config.sampling.cand_mult = 50
+    config.sampling.top_frac = 0.05
+    config.sampling.hardness = "abs"
+    config.sampling.refresh_freq = 200  # Refresh hard bank every n steps
 
     config.wandb = ConfigDict()
-    config.wandb.use = False
+    config.wandb.use = True
     config.wandb.project = 'pinns-training-dynamics'
 
     config.logging = ConfigDict()

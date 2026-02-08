@@ -3,6 +3,7 @@ pdes/burgers/logs/*
 pdes/burgers/figures/*
 pdes/allen_cahn/logs/*
 pdes/allen_cahn/figures/*
+pdes/ks/*
 ckpts/*
 wandb/*
 

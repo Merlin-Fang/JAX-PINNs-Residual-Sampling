@@ -44,19 +44,23 @@ def train(config: ml_collections.ConfigDict):
 
     ModelClass = _PDE_MODELS[config.pde.name]
     model = ModelClass(config, IC=(u_ref[0, :], jnp.full_like(x, t[0]), x))
-    per_device_batch_size = config.training.batch_size // jax.local_device_count()
+    per_device_batch_size = (config.training.global_batch_size // jax.local_device_count()) if config.training.global_batch_size > 1000 else config.training.batch_size_per_device
 
     if config.sampling.method == 'uniform':
         sampler = UniformSampler(jnp.array([[t[0], t[-1]], [x[0], x[-1]]]), per_device_batch_size, config.training.seed)
+
     elif config.sampling.method == 'residual':
+        p_sampler = 0.0
         sampler = ResSampler(
-            jnp.array([[t[0], t[-1]], [x[0], x[-1]]]),
-            per_device_batch_size,
-            res_fn=model.get_residual,
-            rng_key=config.training.seed,
-            pool_size=config.sampling.pool_size,
-            temperature=config.sampling.temperature,
-            uniform_eps=config.sampling.uniform_eps,
+            dom = jnp.array([[t[0], t[-1]], [x[0], x[-1]]]),
+            batch_size = per_device_batch_size,
+            residual_fn = model.get_residual,
+            rng_key = config.training.seed,
+            p = p_sampler,
+            hard_bank_mult=config.sampling.hard_bank_mult,
+            cand_mult=config.sampling.cand_mult,
+            top_frac=config.sampling.top_frac,
+            hardness=config.sampling.hardness,
         )
     save_dir = os.path.join(workdir, 'ckpts', config.pde.name, config.pde.experiment)
 
@@ -78,9 +82,10 @@ def train(config: ml_collections.ConfigDict):
                 model.state = model.update_loss_weights(model.state, batch)
 
         if config.sampling.method == 'residual':
-            if step % config.sampling.recalcprob_freq == 0 and step > 0:
-                state0 = tree_map(lambda x: x[0], model.state)
-                sampler.update_pool(state0.params, refresh_pool=(step % config.sampling.refpool_freq == 0))
+            if step % config.sampling.refresh_freq == 0 and step > 0.4 * config.training.num_steps:
+                p_sampler = (step - 0.4 * config.training.num_steps) / (0.4 * config.training.num_steps) * 0.2 # Linearly increase p from 0 to 0.2 between 40% and 80% of training
+                sampler.p = p_sampler
+                sampler.refresh(model.state.params)
  
         if step % config.logging.freq == 0:
             state = jax.device_get(tree_map(lambda x: x[0], model.state))
