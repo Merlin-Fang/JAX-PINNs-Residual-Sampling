@@ -5,26 +5,26 @@ def get_config():
     config = ConfigDict()
 
     config.pde = ConfigDict()
-    config.pde.name = 'allen_cahn'  # Options: 'burgers', 'allen_cahn', 'ks'
-    config.pde.run = 'residual_sampling'  # Options: 'uniform_sampling', 'residual_sampling'
-    config.pde.experiment = config.pde.name + '_experiment_' + config.pde.run
+    config.pde.name = 'allen_cahn'
+    config.pde.run = 'residual_sampling'
+    config.pde.experiment = config.pde.name + '_soft_' + config.pde.run
 
     config.model = ConfigDict()
     config.model.hidden_layers = 4
     config.model.hidden_size = 256
     config.model.output_size = 1
-    config.model.activation = 'tanh'  # Options could be 'relu', 'tanh', etc.
+    config.model.activation = 'tanh'
     config.model.weight_fact = {'mean': 0.5, 'stddev': 0.1}
     config.model.periodic_embed = {'period': jnp.pi, 'axis': (1,)}
     config.model.fourier_embed = {'scale': 1.0, 'dim': 256}
 
     config.training = ConfigDict()
     config.training.seed = 42
-    config.training.global_batch_size = 4096 # Total batch size across all devices
+    config.training.global_batch_size = 4096
     config.training.batch_size_per_device = 1024
-    config.training.num_steps = 30000
+    config.training.num_steps = 200000
     config.training.momentum = 0.9
-    config.training.loss_weights = {"ic": 1.0, "res": 1.0}  # Initial loss weights can be set here
+    config.training.loss_weights = {"ic": 1.0, "res": 1.0}
     config.training.save_freq = None 
 
     config.optim = ConfigDict()
@@ -38,24 +38,24 @@ def get_config():
     config.optim.decay_steps = 2000
 
     config.weighing = ConfigDict()
-    config.weighing.scheme = 'ntk'  # Options could be 'ntk', 'grad_norm', etc.
-    config.weighing.momentum = 0.9  # Momentum for updating loss weights
-    config.weighing.update_freq = 1000  # Update loss weights every n steps
+    config.weighing.scheme = 'ntk'
+    config.weighing.momentum = 0.9
+    config.weighing.update_freq = 1000
 
     config.sampling = ConfigDict()
-    config.sampling.method = 'residual'  # Options: 'uniform', 'residual'
+    config.sampling.method = 'residual'
     config.sampling.hard_bank_mult = 50
     config.sampling.cand_mult = 50
     config.sampling.top_frac = 0.05
     config.sampling.hardness = "abs"
-    config.sampling.refresh_freq = 200  # Refresh hard bank every n steps
+    config.sampling.refresh_freq = 200
 
     config.wandb = ConfigDict()
     config.wandb.use = True
-    config.wandb.project = 'pinns-training-dynamics'
+    config.wandb.project = 'PINNs-Residual-Sampling'
 
     config.logging = ConfigDict()
-    config.logging.handler_type = 'file'  # Options: 'stream' or 'file'
+    config.logging.handler_type = 'file'
     config.logging.log_dir = '/scratch/merlinf/repos/PINNs-Training-Dynamics/pdes/' + config.pde.name + '/logs/'
     config.logging.freq = 100
     config.logging.log_losses = True

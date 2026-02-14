@@ -3,9 +3,13 @@ pdes/burgers/logs/*
 pdes/burgers/figures/*
 pdes/allen_cahn/logs/*
 pdes/allen_cahn/figures/*
+src/residual_plot.py
+figures/*
 pdes/ks/*
 ckpts/*
 wandb/*
+run.sh
+src/configs/default.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
